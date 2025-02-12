@@ -13,7 +13,7 @@ const Navbar = () => {
   return (
     <div
       className={`flex items-center justify-between px-4 sm:px-10 md:px-14 lg:px-36 border-b border-gray-500 py-4 ${
-        isCourseListPage ? "bg-white" : "bg-yellow-100/70"
+        isCourseListPage ? "bg-white" : "bg-green-100/70"
       }`}
     >
       <img
@@ -42,7 +42,7 @@ const Navbar = () => {
         ) : (
           <button
             onClick={() => openSignIn()}
-            className="bg-yellow-600 text-white px-5 py-2 rounded-full"
+            className="bg-green-600 text-white px-5 py-2 rounded-full"
           >
             Create Account
           </button>
