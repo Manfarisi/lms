@@ -13,6 +13,8 @@ export const getAllCourse = async (req, res) => {
   }
 };
 
+
+
 // get course by id
 export const getCourseId = async (req, res) => {
   const { id } = req.params;
@@ -31,4 +33,6 @@ export const getCourseId = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+
 

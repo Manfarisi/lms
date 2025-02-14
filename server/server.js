@@ -14,19 +14,18 @@ const app = express();
 
 // conet to database
 await connectDB();
-await connectCloudinary()
+await connectCloudinary();
 
 // middleware
 app.use(cors());
-app.use(clerkMiddleware())
+app.use(clerkMiddleware());
 // routes
 app.get("/", (req, res) => res.send("API Working"));
-app.post('/clerk',express.json(),clerkWebhooks)
-app.use('/api/educator',express.json(), educatorRouter)
-app.use('/api/course',express.json(), courseRouter)
-app.use('/api/user',express.json(), userRouter)
-app.post('/stripe',express.raw()({type: 'application/json'}), stripeWebhooks)
-
+app.post("/clerk", express.json(), clerkWebhooks);
+app.use("/api/educator", express.json(), educatorRouter);
+app.use("/api/course", express.json(), courseRouter);
+app.use("/api/user", express.json(), userRouter);
+app.post("/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
 
 // port
 const PORT = process.env.PORT || 5000;
