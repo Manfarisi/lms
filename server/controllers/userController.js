@@ -31,54 +31,60 @@ export const userEnrolledCourses = async(req,res)=>{
 
     }
 }
+
 // purchase course
 export const purchaseCourse = async (req, res) => {
   try {
-    const {courseId} = req.body
-    const {origin} = req.headers
-    const userId = req.auth.userId
-    const userData = await User.findById(userId)
-    const courseData = await Course.findById(courseId)
+    const { courseId } = req.body;
+    const { origin } = req.headers;
+    const userId = req.auth.userId;
+    
+    const userData = await User.findById(userId);
+    const courseData = await Course.findById(courseId);
 
-    if(!userData || !courseData){
-      return res.json({success: false, message: 'Data not Found'})
+    if (!userData || !courseData) {
+      return res.status(404).json({ success: false, message: "Data not Found" });
     }
-    const purchaseData = {
+
+    // Hitung harga setelah diskon
+    const discountedPrice = (courseData.coursePrice - courseData.discount * courseData.coursePrice / 100).toFixed(2);
+
+    const newPurchase = await Purchase.create({
       courseId: courseData._id,
       userId,
-      amount: (courseData.coursePrice - courseData.discount * courseData.coursePrice / 100).toFixed(2)
-    }
+      amount: discountedPrice,
+    });
 
-    const newPurchase = await Purchase.create(purchaseData)
-    // stripe gatewau initilize
-    const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY)
-    const currency = process.env.CURRENCY.toLowerCase()
+    // Inisialisasi Stripe
+    const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const currency = (process.env.CURRENCY || "usd").toLowerCase();
+    
+    // Perbaiki origin jika undefined
+    const originUrl = origin || process.env.FRONTEND_URL || "http://localhost:3000";
 
-    // creating line item to for stripe
+    // Buat line item
     const line_items = [{
-      price_data:{
+      price_data: {
         currency,
-        product_data:{
-          name: courseData.courseTitle
-        },
-        unit_amount: Math.floor(newPurchase.amount) * 100
+        product_data: { name: courseData.courseTitle },
+        unit_amount: Math.round(newPurchase.amount * 100), // Fix: Gunakan Math.round
       },
-      quantity: 1
-    }]
+      quantity: 1,
+    }];
 
+    // Buat sesi checkout Stripe
     const session = await stripeInstance.checkout.sessions.create({
-      success_url: `${origin}/loading/my-enrollments`,
-      cancel_url: `${origin}/`,
-      line_items: line_items,
-      mode: 'payment',
-      metadata :{
-        purchaseId: newPurchase._id.toString()
-      }
-    })
-    res.json({success: true, session_url:session.url})
-  } catch (error) {
-    res.json({success: false, message: error.message})
+      success_url: `${originUrl}/loading/my-enrollments`,
+      cancel_url: `${originUrl}/`,
+      line_items,
+      mode: "payment",
+      metadata: { purchaseId: newPurchase._id.toString() },
+    });
 
+    res.json({ success: true, session_url: session.url });
+
+  } catch (error) {
+    console.error("Error in purchaseCourse:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
-}
-  
+};
