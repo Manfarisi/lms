@@ -25,7 +25,8 @@ export const userEnrolledCourses = async(req,res)=>{
     try {
         const userId = req.auth.userId
         const userData = await User.findById(userId).populate('enrolledCourses')
-        res.json({success: true, userEnrolledCourses: userData.enrolledCourses})
+        res.json({success: true, enrolledCourses: userData.enrolledCourses})
+        // userEndoledCosrse
 
     } catch (error) {
         res.json({success: false, message: error.message})
@@ -112,7 +113,7 @@ export const updateUserCourseProgress = async (req,res)=>{
       })
     }
 
-    res.json({succes: true, message: 'Progress Updated'})
+    res.json({success: true, message: 'Progress Updated'})
   }
   catch(error){
     res.json({success: false, message: error.message})
@@ -126,7 +127,7 @@ export const getUserCoursesProgress = async(req,res)=>{
     const {courseId} = req.body
     const progressData = await CourseProgress.findOne({userId, courseId})
 
-    res.json({succes: true, progressData})
+    res.json({success: true, progressData})
   } catch (error) {
     res.json({success: false, message: error.message})
 
@@ -148,22 +149,22 @@ export const addUserRating = async (req, res) => {
     }
     const user = await User.findById(userId)
 
-    if(!user || user.enrolledCourses.includes(courseId)){
+    if(!user || !user.enrolledCourses.includes(courseId)){
       return res.json({success: false, message: 'User has Not purchased this Course'})
     }
 
-    const existingRatingIndex = course.courseRatings.findIndex(r => r.userId === userId)
+    const existingRatingIndex = course.courseRating.findIndex(r => r.userId === userId)
 
     if(existingRatingIndex > -1){
-      course.courseRatings[existingRatingIndex].rating = rating
+      course.courseRating[existingRatingIndex].rating = rating
     }else{
-      course.courseRatings.push({userId, rating})
+      course.courseRating.push({userId, rating})
     }
     await course.save()
 
-    return res.json({succes: true, message: 'Rating added'})
+    return res.json({success: true, message: 'Rating added'})
   } catch (error) {
-    return res.json({succes:false, message: error.message})
+    return res.json({success:false, message: error.message})
     
   }
 }

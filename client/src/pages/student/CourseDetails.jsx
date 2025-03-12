@@ -6,6 +6,8 @@ import { assets } from "../../assets/assets";
 import humanizeDuration from "humanize-duration";
 import Footer from "../../components/student/Footer";
 import YouTube from "react-youtube";
+import axios, { Axios } from "axios";
+import { toast } from "react-toastify";
 
 const CourseDetails = () => {
   const { id } = useParams();
@@ -21,16 +23,58 @@ const CourseDetails = () => {
     calculateCourseDuration,
     calculateNoOfLectures,
     currency,
+    backendUrl,
+    userData,
+    getToken
   } = useContext(AppContext);
 
   const fetchCourseData = async () => {
-    const findCourse = allCourses.find((course) => course._id === id);
-    setCourseData(findCourse);
+    try {
+      const {data} = await axios.get(backendUrl + '/api/course/' + id)
+
+      if(data.success){
+        setCourseData(data.courseData)
+      }else{
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(data.message)
+    } 
   };
+
+  const enrollCourse = async ()=>{
+    try {
+      if(!userData){
+        return toast.warn('Login to enroll')
+      }
+      if(isAlreadyEnrolled){
+        return toast.warn('Already enroll')
+
+      }
+
+      const token = await getToken()
+      const {data} = await axios.post(backendUrl + '/api/user/purchase',{courseId: courseData._id}, {headers: {Authorization: `Bearer ${token}`}})
+      if(data.success){
+        const {session_url} = data
+        window.location.replace(session_url)
+      }else{
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(data.message)
+    }
+  }
 
   useEffect(() => {
     fetchCourseData();
-  }, [allCourses]);
+  }, []);
+
+  useEffect(() => {
+    if (userData && courseData) {
+      setisAlreadyEnrolled(userData.enrollCourse?.includes(courseData._id) || false);
+    }
+  }, [userData, courseData]);
+  
 
   const toggleSection = (index) => {
     setOpenSections((prev) => ({ ...prev, [index]: !prev[index] }));
@@ -68,17 +112,16 @@ const CourseDetails = () => {
               ))}
             </div>
             <p className="text-blue-500">
-              ({courseData.courseRatings.length}
-              {courseData.courseRatings.length > 1 ? "ratings" : "rating"})
+              ({courseData.courseRating.length}
+              {courseData.courseRating.length > 1 ? "ratings" : "rating"})
             </p>
             <p>
               {courseData.enrolledStudents.length}
               {courseData.enrolledStudents.length > 1 ? "students" : "student"}
             </p>
           </div>
-          <p className="text-sm">
-            Course by <span className="text-blue-600">E-student</span>
-          </p>
+          <p className="text-gray-500">{courseData.educator ? courseData.educator.name : "Unknown Educator"}</p>
+
           <div className="pt-8 text-gray-800">
             <h2 className="text-xl font-semibold">Course Structure</h2>
             <div className="pt-5">
@@ -227,7 +270,7 @@ const CourseDetails = () => {
               </div>
             </div>
 
-            <button className="md:mt-6 w-full py-3 rounded bg-blue-600 text-white font-medium">
+            <button onClick={enrollCourse} className="md:mt-6 w-full py-3 rounded bg-blue-600 text-white font-medium">
               {isAlreadyEnrolled ? "Already Enrolled" : "Enroll Now"}
             </button>
 
