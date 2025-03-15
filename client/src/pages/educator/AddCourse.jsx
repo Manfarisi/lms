@@ -22,7 +22,7 @@ const AddCourse = () => {
   const [lectureDetails, setLectureDetails] = useState({
     lectureTitle: "",
     lectureDuration: "",
-    lectureUrl: "",
+    lectureurl: "",
     isPreviewFree: false,
   });
 
@@ -106,10 +106,10 @@ const AddCourse = () => {
 
       const courseData = {
         courseTitle,
-        courseDescription: quillRef.current.root.innerHTML,
+        courseDescription: quillRef.current ? quillRef.current.root.innerHTML : "",
         coursePrice: Number(coursePrice),
         discount: Number(discount),
-        courseContet: chapters,
+        courseContent: chapters,
       };
 
       const formData = new FormData();
